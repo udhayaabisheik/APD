@@ -10,16 +10,19 @@ import {
 } from "react-native";
 import Icon from "react-native-vector-icons/MaterialCommunityIcons";
 import { Link, useRouter } from "expo-router"; // Use useRouter from expo-router
+import DateTimePicker, { DateTimePickerEvent } from "@react-native-community/datetimepicker"; // Correct import for DateTimePickerEvent
 
 const SignUpScreen = () => {
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
+  const [dob, setDob] = useState(new Date()); // Default to current date
+  const [showPicker, setShowPicker] = useState(false); // State to toggle date picker visibility
   const router = useRouter(); // To navigate programmatically
 
   const handleSignUp = async () => {
-    if (!name || !email || !password || !confirmPassword) {
+    if (!name || !email || !password || !confirmPassword || !dob) {
       Alert.alert("Error", "Please fill in all fields.");
       return;
     }
@@ -33,6 +36,7 @@ const SignUpScreen = () => {
       name,
       email,
       password,
+      dob: dob.toISOString(), // Send date as ISO string
     };
 
     try {
@@ -58,6 +62,11 @@ const SignUpScreen = () => {
       // Handle network or other errors
       Alert.alert("Error", "An error occurred. Please try again later.");
     }
+  };
+
+  const handleDateChange = (event: DateTimePickerEvent, selectedDate?: Date) => {
+    setShowPicker(false); // Close the picker
+    if (selectedDate) setDob(selectedDate); // Update DOB if a date is selected
   };
 
   return (
@@ -86,6 +95,28 @@ const SignUpScreen = () => {
           onChangeText={setEmail}
         />
       </View>
+
+      {/* DOB Picker */}
+      <TouchableOpacity
+        onPress={() => setShowPicker(true)}
+        style={styles.dobPicker}
+      >
+        <Icon name="calendar" size={24} color="#4CAF50" />
+        <Text style={styles.dobText}>
+          {dob ? dob.toDateString() : "Select Date of Birth"}
+        </Text>
+      </TouchableOpacity>
+
+      {showPicker && (
+        <DateTimePicker
+          value={dob}
+          mode="date"
+          display="default"
+          onChange={handleDateChange}
+          maximumDate={new Date()} // Restrict to past dates only
+        />
+      )}
+
       <View style={styles.inputContainer}>
         <Icon name="lock-outline" size={20} color="#4CAF50" />
         <TextInput
@@ -154,6 +185,22 @@ const styles = StyleSheet.create({
     flex: 1,
     marginLeft: 10,
     color: "#000",
+  },
+  dobPicker: {
+    flexDirection: "row",
+    alignItems: "center",
+    borderWidth: 1,
+    borderColor: "#4CAF50",
+    borderRadius: 8,
+    padding: 10,
+    marginBottom: 15,
+    backgroundColor: "#FFF",
+    width: "100%",
+  },
+  dobText: {
+    marginLeft: 10,
+    color: "#4CAF50",
+    fontSize: 16,
   },
   button: {
     backgroundColor: "#4CAF50",

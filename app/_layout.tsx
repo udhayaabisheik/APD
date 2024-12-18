@@ -48,6 +48,8 @@ export default function RootLayout() {
         )}
         <Stack.Screen name="SignUpScreen" />
         <Stack.Screen name="SupportScreen" />
+        <Stack.Screen name="EditProfileScreen" />
+        <Stack.Screen name="NotificationScreen" />
         <Stack.Screen name="ProductDetailsScreen" />
         <Stack.Screen name="+not-found" />
       </Stack>

@@ -4,6 +4,7 @@ import Icon from "react-native-vector-icons/MaterialCommunityIcons";
 import { useRouter } from "expo-router";
 import { Link } from "expo-router";
 import axios from "axios"; // Import axios for API requests
+import AsyncStorage from '@react-native-async-storage/async-storage'; // Import AsyncStorage
 
 const LoginScreen = () => {
   const [email, setEmail] = useState("");
@@ -21,17 +22,20 @@ const LoginScreen = () => {
             password: password,
           },
         });
-  
+
         // Check if the response is successful
         if (response.status === 200 && response.data) {
-          const { id, name, email } = response.data; // Destructure to get only id, name, and email
-  
+          const { id, name, email, mobileno } = response.data; // Destructure to get only id, name, and email
+
           Alert.alert("Login Successful", `Welcome, ${email}`);
-          
+
+          // Store user data in AsyncStorage
+          await AsyncStorage.setItem('userData', JSON.stringify({ id, name, email, mobileno }));
+
           // Send user data (id, name, email) to the next page (UserAccountScreen)
           router.push({
             pathname: "/(tabs)/user",
-            params: { id, name, email }, // Pass the specific user data
+            params: { id, name, email, mobileno }, // Pass the specific user data
           });
         } else {
           Alert.alert("Error", "Invalid credentials");
@@ -44,7 +48,7 @@ const LoginScreen = () => {
       Alert.alert("Error", "Please fill in all fields");
     }
   };
-  
+
   return (
     <View style={styles.container}>
       <Text style={styles.title}>Login Account</Text>

@@ -1,5 +1,16 @@
 import React, { useEffect, useState } from 'react';
-import { SafeAreaView, StyleSheet, Image, View, FlatList, Text, TouchableOpacity, TextInput, ActivityIndicator, StatusBar } from 'react-native';
+import { 
+  SafeAreaView, 
+  StyleSheet, 
+  Image, 
+  View, 
+  FlatList, 
+  Text, 
+  TouchableOpacity, 
+  TextInput, 
+  ActivityIndicator, 
+  StatusBar 
+} from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { ThemedText } from '@/components/ThemedText';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
@@ -10,6 +21,8 @@ interface Product {
   name: string;
   image: string;
   price: number;
+  quantity: number;
+  quantityMeasurement: string;
 }
 
 // Define the RootStackParamList for navigation
@@ -20,10 +33,10 @@ type RootStackParamList = {
 type NavigationProps = NativeStackNavigationProp<RootStackParamList>;
 
 export default function HomeScreen() {
-  const [products, setProducts] = useState<Product[]>([]); 
-  const [filteredProducts, setFilteredProducts] = useState<Product[]>([]); 
-  const [loading, setLoading] = useState<boolean>(true); 
-  const [searchQuery, setSearchQuery] = useState<string>(''); 
+  const [products, setProducts] = useState<Product[]>([]);
+  const [filteredProducts, setFilteredProducts] = useState<Product[]>([]);
+  const [loading, setLoading] = useState<boolean>(true);
+  const [searchQuery, setSearchQuery] = useState<string>('');
   const navigation = useNavigation<NavigationProps>();
 
   // Fetch products from the API
@@ -31,8 +44,16 @@ export default function HomeScreen() {
     fetch('http://192.168.0.107:8080/products')
       .then((response) => response.json())
       .then((data) => {
-        setProducts(data);
-        setFilteredProducts(data);
+        const transformedData = data.map((product: any) => ({
+          id: product.id,
+          name: product.name,
+          image: product.images ? `http://192.168.0.107:8080/images/${product.images}` : '',
+          price: product.price,
+          quantity: product.quantity,
+          quantityMeasurement: product.quantityMeasurement,
+        }));
+        setProducts(transformedData);
+        setFilteredProducts(transformedData);
         setLoading(false);
       })
       .catch((error) => {
@@ -54,18 +75,31 @@ export default function HomeScreen() {
     }
   };
 
+  // Handle Add to Cart functionality
+  const handleAddToCart = (productId: number) => {
+    console.log(`Product ${productId} added to cart.`);
+    // Implement cart functionality here
+  };
+
   // Render a single product card
   const renderProduct = ({ item }: { item: Product }) => (
-    <TouchableOpacity
-      style={styles.productCard}
-      onPress={() => navigation.navigate('ProductDetailsScreen', { productId: item.id })}
-    >
-      <Image source={{ uri: item.image }} style={styles.productImage} />
-      <View style={styles.productInfo}>
-        <ThemedText style={styles.productName}>{item.name}</ThemedText>
-        <ThemedText style={styles.productPrice}>${item.price}</ThemedText>
-      </View>
-    </TouchableOpacity>
+    <View style={styles.productCard}>
+      <TouchableOpacity
+        onPress={() => navigation.navigate('ProductDetailsScreen', { productId: item.id })}
+      >
+        <Image source={{ uri: item.image }} style={styles.productImage} />
+        <View style={styles.productInfo}>
+          <ThemedText style={styles.productName}>{item.name}</ThemedText>
+          <ThemedText style={styles.productQuantity}>
+            {item.quantity} {item.quantityMeasurement}
+          </ThemedText>
+          <ThemedText style={styles.productPrice}>₹{item.price}</ThemedText>
+        </View>
+      </TouchableOpacity>
+      <TouchableOpacity style={styles.addToCartButton} onPress={() => handleAddToCart(item.id)}>
+        <Text style={styles.addToCartText}>Add to Cart</Text>
+      </TouchableOpacity>
+    </View>
   );
 
   if (loading) {
@@ -148,7 +182,7 @@ const styles = StyleSheet.create({
   },
   productImage: {
     width: '100%',
-    height: 180,
+    height: 140,
     borderTopLeftRadius: 8,
     borderTopRightRadius: 8,
   },
@@ -160,9 +194,27 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     color: '#4A148C',
   },
+  productQuantity: {
+    fontSize: 14,
+    color: '#6A1B9A',
+    marginTop: 5,
+  },
   productPrice: {
     fontSize: 16,
     color: '#6A1B9A',
     marginTop: 5,
+  },
+  addToCartButton: {
+    backgroundColor: '#6A1B9A',
+    paddingVertical: 10,
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderBottomLeftRadius: 8,
+    borderBottomRightRadius: 8,
+  },
+  addToCartText: {
+    color: '#FFFFFF',
+    fontSize: 16,
+    fontWeight: 'bold',
   },
 });
